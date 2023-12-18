@@ -8,7 +8,7 @@ input_shape:
 learning_rate: 0.0005
 max_spectrogram_length: 389
 max_text_length: 3
-model_path: sound_to_text\202312171725
+model_path: temp_hum_soil\202312171725
 train_epochs: 100
 train_workers: 4
 vocab: 'abcdefghijklmnopqrstuvwxyz''?! '

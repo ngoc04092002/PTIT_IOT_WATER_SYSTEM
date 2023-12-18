@@ -14,6 +14,10 @@ from mltu.preprocessors import WavReader
 from mltu.utils.text_utils import ctc_decoder
 from mltu.configs import BaseModelConfigs
 
+from dbs import insertSchedule, isExistEmail
+from send_mail import send_schedyle_everyday
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 CORS(app, resources={r'/*': {'origins': '*'}})
@@ -21,7 +25,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 def predictTemp(data) -> str:
-    model_path = "G:\PTIT\IOT\html\\temp_hum_soil\model.onnx"
+    model_path = "temp_hum_soil\model.onnx"
     session = rt.InferenceSession(model_path)
 
     # Xây dựng dữ liệu đầu vào theo định dạng phù hợp với model ONNX
@@ -49,6 +53,14 @@ class WavToTextModel(OnnxInferenceModel):
 
         return text
 
+@app.route('/insert-schedule', methods=['POST'])
+def createSchedule():
+    request_data = request.get_json()
+    if 'email' not in request_data:
+        return {'status': '500'}
+    status = insertSchedule(request_data)
+    return {'status': '201'}
+
 
 @app.route('/recognize', methods=['POST'])
 def recognize_speech():
@@ -69,27 +81,7 @@ def recognize_speech():
 
     text = model.predict(padded_spectrogram)
     print('text::', text)
-
-    # Sử dụng thư viện SpeechRecognition để nhận dạng giọng nói
-    r = sr.Recognizer()
-    with sr.AudioFile(audio_path) as source:
-        audio = r.record(source)
-
-    try:
-        # Nhận dạng giọng nói từ dữ liệu audio
-        text = r.recognize_google(audio)
-        
-
-        return json.dumps({'data': text})
-    except sr.UnknownValueError:
-        if (not text):
-            text = 'off'
-        return json.dumps({'data': text})
-    except sr.RequestError:
-        if (not text):
-            text = 'off'
-        return json.dumps({'data': text})
-
+    return json.dumps({'data': text})
 
 @socketio.on('auto')
 def handle_auto_event(req):
@@ -100,6 +92,11 @@ def handle_auto_event(req):
     print(response)
     emit('response', response)
 
+@socketio.on('schedule_init')
+def handle_send_schedules(req):
+    print(req)
+    send_schedyle_everyday()
 
 if __name__ == '__main__':
     socketio.run(app)
+

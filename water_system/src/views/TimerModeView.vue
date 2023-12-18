@@ -61,12 +61,28 @@ function handleAdd() {
   }
   const lastTimer = timers.value.at(-1);
   if (!timer.value.startTime || !timer.value.endTime || !timer.value.date) return;
-  timers.value.push({
+  const data = {
     id: (lastTimer?.id || 0) + 1,
+    email: sessionStorage.getItem('email'),
     startTime: timer.value.startTime,
     endTime: timer.value.endTime,
     date: timer.value.date
-  });
+  };
+  timers.value.push(data);
+
+  fetch('http://127.0.0.1:5000/insert-schedule', {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data)
+  })
+    .then((response) => {
+      return response.json();
+    }).then(data=>{
+      console.log(data);
+    })
+
   timer.value = {
     startTime: '',
     endTime: '',

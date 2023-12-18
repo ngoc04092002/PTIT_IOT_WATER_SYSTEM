@@ -25,7 +25,7 @@ if __name__ == "__main__":
     from mltu.configs import BaseModelConfigs
 
     configs = BaseModelConfigs.load(
-        "G:\PTIT\IOT\html\sound_to_text\\202312171725\configs.yaml")
+        "G:\PTIT\IOT\html\\temp_hum_soil\\202312171725\configs.yaml")
 
     model = WavToTextModel(model_path=configs.model_path,
                            char_list=configs.vocab, force_cpu=False)

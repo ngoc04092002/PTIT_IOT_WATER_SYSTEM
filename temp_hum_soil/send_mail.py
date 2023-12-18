@@ -6,55 +6,44 @@ from pathlib import Path
 
 from dotenv import load_dotenv  # pip install python-dotenv
 
-PORT = 587  
-EMAIL_SERVER = "smtp.gmail.com"  # Adjust server address, if you are not using @outlook
+import schedule
+import time
+from dbs import getSchedulesHTML, getItemByDate, deleteManyByDate
+from datetime import datetime
 
-# Load the environment variables
-current_dir = Path(__file__).resolve().parent if "__file__" in locals() else Path.cwd()
 
-print(current_dir)
-envars = current_dir / ".env"
+PORT = 587
+# Adjust server address, if you are not using @outlook
+EMAIL_SERVER = "smtp.gmail.com"
+
+# current_dir = Path(__file__).resolve().parent if "__file__" in locals() else Path.cwd()
+
+envars = ".env"
 load_dotenv(envars)
 
 # Read environment variables
 sender_email = os.getenv("EMAIL")
 password_email = os.getenv("PASSWORD")
-print(sender_email, password_email)
-sender_email="ngocbeo3387@gmail.com"
-password_email="ubuxzwpvzoukrryx"
 
 
-def send_email(subject, receiver_email, name, due_date, invoice_no, amount):
-    # Create the base text message.
+def send_email(subject, receiver_email, date):
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = formataddr(("Coding Is Fun Corp.", f"{sender_email}"))
+    msg["From"] = formataddr(("NGOC", f"{sender_email}"))
     msg["To"] = receiver_email
     msg["BCC"] = sender_email
 
-    msg.set_content(
-        f"""\
-        Hi {name},
-        I hope you are well.
-        I just wanted to drop you a quick note to remind you that {amount} USD in respect of our invoice {invoice_no} is due for payment on {due_date}.
-        I would be really grateful if you could confirm that everything is on track for payment.
-        Best regards
-        YOUR NAME
-        """
-    )
-    # Add the html version.  This converts the message into a multipart/alternative
-    # container, with the original text message as the first part and the new html
-    # message as the second part.
     msg.add_alternative(
         f"""\
     <html>
       <body>
-        <p>Hi {name},</p>
-        <p>I hope you are well.</p>
-        <p>I just wanted to drop you a quick note to remind you that <strong>{amount} USD</strong> in respect of our invoice {invoice_no} is due for payment on <strong>{due_date}</strong>.</p>
-        <p>I would be really grateful if you could confirm that everything is on track for payment.</p>
-        <p>Best regards</p>
-        <p>YOUR NAME</p>
+        <p>Xin chào bạn,</p>
+        <p>Chúc bạn một ngày tốt lành.</p>
+        <p>Hôm nay bạn có lịch tưới cây vào lúc</p>
+        {date}
+        <p>Mong bạn hãy mở ứng dụng vào các thời gian trên.</p>
+        <p>Cảm ơn bạn đã là khách hàng của chúng tôi</p>
+        <p>NGOC</p>
       </body>
     </html>
     """,
@@ -64,14 +53,27 @@ def send_email(subject, receiver_email, name, due_date, invoice_no, amount):
         server.starttls()
         server.login(sender_email, password_email)
         server.sendmail(sender_email, receiver_email, msg.as_string())
+        print(receiver_email+':: sended')
+
+    return schedule.CancelJob
 
 
-if __name__ == "__main__":
-    send_email(
-        subject="Invoice Reminder",
-        name="John Doe",
-        receiver_email="vua6040@gmail.com",
-        due_date="11, Aug 2022",
-        invoice_no="INV-21-12-009",
-        amount="5",
-    )
+def send_schedyle_everyday():
+    date = datetime.today().strftime('%Y-%m-%d')
+    print(getItemByDate(date))
+    emails = set()
+    for d in getItemByDate(date):
+        emails.add(d['email'])
+
+    for email in emails:
+        schedule.every().day.at("08:00").do(send_email(
+        subject="Hệ thống tưới cây",
+        receiver_email=email,
+        date=getSchedulesHTML(email),
+    ))
+        
+    deleteManyByDate(date)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

@@ -72,9 +72,11 @@ onMounted(() => {
   // client-side
   SocketServer.value.on('connect', () => {
     console.log('Connected socket');
+    SocketServer.value.emit('schedule_init', 'start send email');
 
     const engine = SocketServer.value.io.engine;
     SocketServer.value.on('response', (response) => {
+
       // called for each packet received
       console.log('response-auto', response);
 

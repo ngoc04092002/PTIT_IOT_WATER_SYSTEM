@@ -3,22 +3,15 @@ import { onBeforeMount, onMounted, provide, reactive, ref, watch } from 'vue';
 import ManageView from './ManageView.vue';
 import { UseFormatDate } from '../funcs/UseFormatDate';
 
-function validationIp(ipAddress) {
-  const splitIpAddress = ipAddress.value.split('.');
-
-  if (splitIpAddress.length !== 4) return false;
-
-  for (let ip of splitIpAddress) {
-    if (!ip.length || isNaN(+ip) || +ip > 255 || +ip < 0) {
-      return false;
-    }
+function validationEmail(userEmail) {
+  if (/^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/.test(userEmail.value)) {
+    return true;
   }
-
-  return true;
+  return false;
 }
 
-const ipAddress = ref('');
-const checkIp = ref(false);
+const userEmail = ref('');
+const checkEmail = ref(false);
 const isConnected = ref(false);
 const loading = ref(false);
 const measure = reactive({ temp: '0', hum: '0', soil: '0' });
@@ -32,21 +25,21 @@ provide('CHANGED', eventChanged);
 provide('MEASURE', measure);
 
 onBeforeMount(() => {
-  console.log(sessionStorage.getItem('ip'));
-  if (sessionStorage.getItem('ip')) {
+  console.log(sessionStorage.getItem('email'));
+  if (sessionStorage.getItem('email')) {
     isConnected.value = true;
   }
 });
 
-console.log(checkIp.value);
+console.log(checkEmail.value);
 
 function handleClickConnect() {
-  if (validationIp(ipAddress)) {
+  if (validationEmail(userEmail)) {
     loading.value = true;
     isConnected.value = true; // need tp be removed
-    sessionStorage.setItem('ip', ipAddress.value);
+    sessionStorage.setItem('email', userEmail.value);
   } else {
-    checkIp.value = true;
+    checkEmail.value = true;
   }
 }
 
@@ -84,7 +77,6 @@ onMounted(() => {
   });
   client.value.on('connect', () => {
     console.log(`Client connected: ${clientId}`);
-    isConnected.value = true;
     loading.value = false;
     client.value.subscribe('BTL_N26/temp', { qos: 2 });
     client.value.subscribe('BTL_N26/hum', { qos: 2 });
@@ -164,17 +156,17 @@ watch([eventChanged, selectedMode], (newV, newV2) => {
     <h1 class="title">Hệ thống tưới cây</h1>
     <div class="home-wrapper">
       <input
-        :class="{ 'has-error': checkIp }"
+        :class="{ 'has-error': checkEmail }"
         type="text"
-        placeholder="Ex: 192.168.0.1"
-        v-model.trim="ipAddress"
+        placeholder="Ex: my-email@gmail.com"
+        v-model.trim="userEmail"
       />
       <button class="btn-connect" @click="handleClickConnect" :disabled="loading">
         {{ loading ? 'Đang kết nối' : 'Kết nối' }}
       </button>
     </div>
-    <div class="text-danger" :class="{}" v-if="checkIp">
-      <span>Địa chỉ chưa chính xác!</span>
+    <div class="text-danger" :class="{}" v-if="checkEmail">
+      <span>Email chưa chính xác!</span>
     </div>
   </div>
   <div v-else-if="isConnected">
