@@ -35,5 +35,7 @@ def deleteManyByDate(date):
    mycol.delete_many({'date': date})
 
 
-
+def deleteUserInfo(userInfo):
+   print('user info deleted')
+   mycol.delete_one(userInfo)
 

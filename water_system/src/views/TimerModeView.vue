@@ -44,13 +44,14 @@ const timers = ref(JSON.parse(localStorage.getItem('timers')) || []);
 const changed = inject('CHANGED');
 
 watch(changed, (newV, oldV) => {
-  console.log('change timer==>',newV);
   timers.value = JSON.parse(localStorage.getItem('timers')) || [];
 });
 
 function handleAdd() {
   const [currentDate, time] = UseFormatDate(new Date()).split(' ');
-  timers.value = timers.value.filter((timer) => timer.date >= currentDate && timer.startTime >= time);
+  timers.value = timers.value.filter(
+    (timer) => timer.date >= currentDate && timer.startTime >= time
+  );
   if (
     timer.value.startTime <= time ||
     timer.value.startTime >= timer.value.endTime ||
@@ -73,15 +74,16 @@ function handleAdd() {
   fetch('http://127.0.0.1:5000/insert-schedule', {
     method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(data)
   })
     .then((response) => {
       return response.json();
-    }).then(data=>{
-      console.log(data);
     })
+    .then((data) => {
+      console.log(data);
+    });
 
   timer.value = {
     startTime: '',
@@ -94,7 +96,24 @@ function handleAdd() {
 
 function handleDelete(id) {
   timers.value = JSON.parse(localStorage.getItem('timers'));
+  const itemDeleted = timers.value.find((timer) => timer.id === id);
+
   timers.value = timers.value.filter((timer) => timer.id !== id);
+
+  fetch('http://127.0.0.1:5000/delete-one-schedule', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(itemDeleted)
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      console.log(data);
+    });
+
   localStorage.setItem('timers', JSON.stringify(timers.value));
   changed.value += 1;
 }

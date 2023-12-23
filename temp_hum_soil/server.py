@@ -14,7 +14,7 @@ from mltu.preprocessors import WavReader
 from mltu.utils.text_utils import ctc_decoder
 from mltu.configs import BaseModelConfigs
 
-from dbs import insertSchedule, isExistEmail
+from dbs import insertSchedule, isExistEmail, deleteUserInfo
 from send_mail import send_schedyle_everyday
 
 
@@ -54,7 +54,7 @@ class WavToTextModel(OnnxInferenceModel):
         return text
 
 @app.route('/insert-schedule', methods=['POST'])
-def createSchedule():
+def create_schedule():
     request_data = request.get_json()
     if 'email' not in request_data:
         return {'status': '500'}
@@ -82,6 +82,14 @@ def recognize_speech():
     text = model.predict(padded_spectrogram)
     print('text::', text)
     return json.dumps({'data': text})
+
+@app.route('/delete-one-schedule', methods=['POST'])
+def delete_one_schedule():
+    request_data = request.get_json()
+    if 'email' not in request_data:
+        return {'status': '500'}
+    status = deleteUserInfo(request_data)
+    return {'status': '201'}
 
 @socketio.on('auto')
 def handle_auto_event(req):

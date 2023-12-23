@@ -60,7 +60,6 @@ def send_email(subject, receiver_email, date):
 
 def send_schedyle_everyday():
     date = datetime.today().strftime('%Y-%m-%d')
-    print(getItemByDate(date))
     emails = set()
     for d in getItemByDate(date):
         emails.add(d['email'])
